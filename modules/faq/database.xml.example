@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<database>
+  <entry>
+    <id>fact</id>
+    <title>Example Fact</title>
+    <keywords>example fact</keywords>
+    <url></url>
+    <body><![CDATA[This is an example fact]]></body>
+  </entry>
+</database>
