@@ -105,43 +105,8 @@ $hero-height: 100vh;
   text-align: center;
   width: 100%;
 }
-#hero {
-  @include heroDims;
-  position: relative;
-}
-#hero-overlay {
-  @include heroDims;
-  background-color: rgba(0,0,0,0.7);
-  position: absolute;
-  top: 0px;
-  width: 100%;
-  z-index: 10;
-}
-#hero-overlay-content {
-  @include centeredContentDims;
-  @include absoluteCenter(50%,50%);
-  color: white;
-  height: auto;
-  padding-bottom: 25px;
-  transform: translateX(-50%) translateY(-50%);
-
-  h1 {
-    color: white;
-    font-family: freight-display-pro;
-    font-size: 70px;
-    font-weight: 600;
-    letter-spacing: .015em;
-    line-height: 1em;
-  }
-  p {
-    color: white;
-  }
-}
 #main-content {
   background-color: rgb(250,250,255);
-}
-.section-start-icon {
-  font-size: 40px;
 }
 .section-content {
   @include centeredContent;
@@ -156,6 +121,18 @@ $hero-height: 100vh;
       max-width: 500px;
       text-align: center;
     }
+  }
+}
+input, button {
+  width: 100%;
+}
+.form {
+  input[type="text"] {
+    margin-bottom: 20px;
+  }
+  select, table {
+    margin-bottom: 20px;
+    width: 100%;
   }
 }
 .light-section {
@@ -191,20 +168,6 @@ $hero-height: 100vh;
     }
   }
 }
-#title {
-  .section-content {
-    background-image: url('/data/images/spotlight_bird.png');
-    background-position: right;
-    background-repeat: no-repeat;
-    background-size: contain;
-    min-height: 500px;
-
-    .section-header h1 {
-      margin: 0;
-      text-align: left;
-    }
-  }
-}
 @include media(max-width $small-width) {
   #header-menu {
     display: none;
@@ -227,17 +190,13 @@ $hero-height: 100vh;
     }
   }
 }
-#contact {
-  .section-content {
-    background-image: url('/data/images/spotlight_bird.png');
-    background-position: right;
-    background-repeat: no-repeat;
-    background-size: contain;
-    min-height: 500px;
-
-    .section-header h1 {
-      margin: 0;
-      text-align: left;
-    }
+input[type="checkbox"] {
+  height: 50px;
+  width: 50px;
+}
+#chess-checklist {
+  input[type="checkbox"] {
+    width: 50px;
+    height: 30px;
   }
 }
