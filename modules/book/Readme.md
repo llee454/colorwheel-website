@@ -377,8 +377,13 @@ function book_bodyBlock (context, done) {
       return done (error);
     }
 
-    context.element.replaceWith (content);
-    done (null, content);
+    var resultElement = $('<div></div>')
+      .addClass ('book_body')
+      .addClass ('book_page_body')
+      .html (content);
+
+    context.element.replaceWith (resultElement);
+    done (null, resultElement);
   });
 }
 
@@ -582,14 +587,25 @@ book_Template.prototype.getNumLeafs = function () {
   Accepts no arguments, creates a template_page
   Object from the template referenced by path, 
   and returns the object inside an array.
+
+  Note: template pages use the same HTML classes
+  as normal book pages.
 */
 book_Template.prototype.getTemplates = function () {
-  var self = this;
-  var f = function (done) {
-    getTemplate (self.path, done);
-  }
+  return [new template_Page (null, this.id, this.getRawPageTemplate, 'book_page')];
+}
 
-  return [new template_Page (null, this.id, f, 'book_template')];
+/*
+  Accepts one argument, done, a function that
+  takes two arguments: an Error and a jQuery HTML
+  Element. Returns the raw HTML template for a 
+  template page object.
+
+  Note: template pages use the same template as
+  normal book pages.
+*/
+book_Template.prototype.getRawPageTemplate = function (done) {
+  getTemplate ('modules/book/templates/page_page_template.html', done);
 }
 
 /*
