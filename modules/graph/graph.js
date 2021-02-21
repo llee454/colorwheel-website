@@ -16,6 +16,7 @@ MODULE_LOAD_HANDLERS.add (
       'modules/graph/lib/network.js',
       'modules/graph/lib/venn.js/venn.js',
       'modules/graph/lib/whiskers_diagram.js',
+      'modules/graph/lib/points_diagram.js',
       'modules/graph/lib/map_diagram.js'
     ],
     function (error) {
@@ -29,6 +30,7 @@ MODULE_LOAD_HANDLERS.add (
         'graph_venn_block': graph_venn_block,
         'graph_sankey_block': graph_sankey_block,
         'graph_whiskers_block': graph_whiskers_block,
+        'graph_points_block': points_block,
         'graph_map_block': graph_map_block
       });
 
@@ -184,6 +186,37 @@ function graph_whiskers_block (context, done, expand) {
       whiskersDiagram (
         blockArguments.data_file_name,
         blockArguments.container_id,
+        blockArguments.height,
+        blockArguments.width
+      );
+      done (null, null)
+  })
+}
+
+function graph_points_block (context, done, expand) {
+  getBlockArguments ([
+      {'name': 'data_file_name',  'text': true, 'required': true},
+      {'name': 'container_id',    'text': true, 'required': true},
+      {'name': 'x_field_name',    'text': true, 'required': true},
+      {'name': 'y_field_name',    'text': true, 'required': true},
+      {'name': 'x_axis_label',    'text': true, 'required': true},
+      {'name': 'y_axis_label',    'text': true, 'required': true},
+      {'name': 'height',          'text': true, 'required': false},
+      {'name': 'width',           'text': true, 'required': false}
+    ],
+    context.element,
+    function (error, blockArguments) {
+      if (error) return done (error)
+
+      var element = $('<div></div>').attr ('id', blockArguments.container_id)
+
+      context.element.replaceWith (element)
+
+      pointsDiagram (
+        blockArguments.x_field_name,
+        blockArguments.y_field_name,
+        blockArguments.x_axis_label,
+        blockArguments.y_axis_label,
         blockArguments.height,
         blockArguments.width
       );
