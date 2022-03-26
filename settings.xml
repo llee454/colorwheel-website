@@ -65,8 +65,10 @@
     <module name="form"             enabled="false" url="modules/form/form.js"/>
     <module name="graph"            enabled="true" url="modules/graph/graph.js"/>
     <module name="lightbox"         enabled="false" url="modules/lightbox/lightbox.js"/>
+    <module name="markdown"         enabled="false" url="modules/markdown/markdown.js"/>
     <module name="menu"             enabled="false" url="modules/menu/menu.js"/>
     <module name="modal"            enabled="false" url="modules/modal/modal.js"/>
+    <module name="mustache"         enabled="false" url="modules/mustache/mustache.js"/>
     <module name="presentation"     enabled="false" url="modules/presentation/presentation.js"/>
     <module name="rate"             enabled="false" url="modules/rate/rate.js"/>
     <module name="select"           enabled="false" url="modules/select/select.js"/>
