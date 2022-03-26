@@ -18,9 +18,10 @@ pointsDiagram = function (
     .attr ('viewBox', '0 0 ' + maxWidth + ' ' + maxHeight)
     .append ("g")
     .attr ("transform", "translate(" + margin.left + "," + margin.top + ")");
-  
+
   d3.csv (dataFileName).then (function (data) {
-    var parseDate = d3.timeParse("%Y-%m-%d %I:%M:%S");
+    // var parseDate = d3.timeParse("%Y-%m-%d %I:%M:%S");
+    var parseDate = d3.timeParse("%Y-%m-%d");
 
     var points = data
       .slice (-14)
@@ -37,12 +38,12 @@ pointsDiagram = function (
     var x = d3.scaleTime ()
      .domain (d3.extent (points, p => p.x))
      .range ([0, width]);
-  
+
     // Add Y axis
     var y = d3.scaleLinear ()
       .domain ([d3.min (points, p => p.y), d3.max (points, p => p.y)]) // Note: starting value cannot be 0
       .range ([height, 0]);
-  
+
     // create points
     svg.selectAll ("dot")
       .data (points)
@@ -68,4 +69,4 @@ pointsDiagram = function (
         .attr("class", "y axis")
         .call(yAxis);
   })
-}                                                      
+}

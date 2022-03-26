@@ -22,7 +22,7 @@ scalableMarimekko = function (
     .append ("g")
       .attr ("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  d3.csv (dataFileName, function (data) {
+  d3.csv (dataFileName).then (function (data) {
 
     var groups = data
       .map (x => x [groupFieldName])
@@ -59,7 +59,7 @@ scalableMarimekko = function (
       );
 
     // text label for the x axis
-    svg.append("text")             
+    svg.append("text")
       .attr ("transform", "translate(" + (width/2) + " ," +  (height + margin.top + 40) + ")")
       .style ("text-anchor", "middle")
       .text (xAxisLabel);
@@ -128,7 +128,7 @@ scalableMarimekko = function (
       .append ('g')
       .attr ('class', 'subgroup')
       .attr("transform", d => "translate(" + x(d.group) + ",0)")
-    
+
       // create the subgroup bar element
       .selectAll (containerID + ' .subgroup')
       .data (d => {
@@ -151,7 +151,7 @@ scalableMarimekko = function (
 
       // create the bar segment elements
       .append ("rect")
-        .attr ("x", d => xYear (d.value.subgroup)) 
+        .attr ("x", d => xYear (d.value.subgroup))
         .attr ("y", d => y (d.value.stack [0][1]))
         .attr ("height", d => y (d.value.stack [0][0]) - y (d.value.stack [0][1]))
         .attr ("width", xYear.bandwidth ())
@@ -178,9 +178,9 @@ scalableMarimekko = function (
             scaled = !scaled;
         });
 
-      var swabSize = 25;
+      var swabSize = 10;
       var legendX = - margin.left;
-      var legendY = 0;
+      var legendY = height + margin.top + 40;
 
       svg.selectAll ('legend-swabs')
         .data (segments)

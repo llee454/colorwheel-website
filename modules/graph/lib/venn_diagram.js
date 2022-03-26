@@ -21,7 +21,7 @@ vennDiagram = function (
   height = 920, // the height of the SVG element
   width = 800   // the width of the SVG element
 ) {
-  d3.csv (dataFileName, function (csv) {
+  d3.csv (dataFileName).then (function (csv) {
     var sets = csv.reduce (
       function (acc, row, index) {
         acc.push ({
@@ -45,7 +45,7 @@ vennDiagram = function (
       .attr ('class', 'tooltip')
       .style ('position', 'absolute')
       .style ('text-align', 'center')
-    
+
     d3.selectAll ('#' + containerID + ' .venn-circle path')
       .on ('mouseover', function (d) {
           venn.sortAreas (container, d)
@@ -55,14 +55,14 @@ vennDiagram = function (
             .transition ()
             // .duration (400)
             .style ('opacity', 0.9)
-         
+
           d3.select ('.tooltip')
             // .duration (400)
 /*
           d3.select (this).select ('path')
             .style ('stroke-width', 3)
             .style ('fill-opacity', d.sets.length == 1 ? 0.4 : 0.1)
-            .style ('stroke-opacity', 1) 
+            .style ('stroke-opacity', 1)
 */
           var selection = d3.select(this).transition("tooltip").duration(400);
           selection.select("path")
@@ -91,7 +91,7 @@ vennDiagram = function (
           d3.select (this).select ('path')
             .style ('stroke-width', 0)
             .style ('fill-opacity', d.sets.length == 1 ? 0.25 : 0.0)
-            .style ('stroke-opacity', 0) 
+            .style ('stroke-opacity', 0)
 */
         })
   })

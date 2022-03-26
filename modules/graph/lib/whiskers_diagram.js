@@ -1,6 +1,8 @@
 whiskersDiagram = function (
   dataFileName,
   containerID,
+  xAxisLabel,
+  yAxisLabel,
   maxWidth = 920,
   maxHeight = 800
 ) {
@@ -14,8 +16,8 @@ whiskersDiagram = function (
     .attr ('viewBox', '0 0 ' + maxWidth + ' ' + maxHeight)
     .append ("g")
     .attr ("transform", "translate(" + margin.left + "," + margin.top + ")");
-  
-  d3.csv (dataFileName, function (data) {
+
+  d3.csv (dataFileName).then (function (data) {
     var programs = data
       .map (x => x.program)
       .reduce (((programs, program) => {
@@ -24,7 +26,7 @@ whiskersDiagram = function (
         }
         return programs;
       }), []);
-  
+
     var years = data
       .map (x => x.year)
       .reduce (((years, year) => {
@@ -33,25 +35,30 @@ whiskersDiagram = function (
         }
         return years;
       }), []);
-  
+
+    var yMax = data
+      .reduce (((yMax, x) => {
+        return Math.max (yMax, x.q4)
+      }), 0);
+
     // color palette = one color per subgroup
     var color = d3.scaleOrdinal ()
       .domain (years)
       .range (d3.schemeSet2);
-  
+
     // Add X axis
     var x = d3.scaleBand ()
         .domain (programs)
         .range ([0, width])
         .padding ([0.2])
-  
+
     // text label for the x axis
-    svg.append ("text")             
+    svg.append ("text")
       .attr ("transform",
         "translate(" + (width/2) + " ," +  (height + margin.top + 40) + ")")
       .style ("text-anchor", "middle")
-      .text ("Program/Year (2017, 2018, 2019)");
-  
+      .text (xAxisLabel);
+
     svg.append ("g")
       .attr ("transform", "translate(0," + height + ")")
       .call (
@@ -59,12 +66,12 @@ whiskersDiagram = function (
           .tickSizeOuter (0)
           .tickFormat ((d, i) => d)
       );
-  
+
     // Add Y axis
     var y = d3.scaleLinear ()
-      .domain ([0, 2000])
+      .domain ([0, yMax * 1.1])
       .range ([ height, 0 ]);
-  
+
     // text label for the y axis
     svg.append ("text")
       .attr ("transform", "rotate(-90)")
@@ -72,32 +79,32 @@ whiskersDiagram = function (
       .attr ("x",0 - (height / 2))
       .attr ("dy", "1em")
       .style ("text-anchor", "middle")
-      .text ("Days");      
-  
+      .text (yAxisLabel);
+
     svg.append("g")
       .call (d3.axisLeft (y));
-  
+
     var xYear = d3.scaleBand ()
       .domain (years)
       .range ([0, x.bandwidth()])
       .padding ([0.05])
-  
+
     var boxWidth = 10;
-  
+
     var yearElems = svg.append ("g")
       .selectAll ("g")
       .data (programs)
       .enter ()
       .append ("g")
       .attr ('class', 'program')
-  
+
       // create year element
       .selectAll ('.program')
       .data (function (p) {
         var result = years
           .map (y => {
             var entry = data.find (entry => entry.program == p && entry.year == y);
-  
+
             return entry ? {
               key: y,
               value: {
@@ -119,15 +126,15 @@ whiskersDiagram = function (
       .attr("transform", function(d) {
         return "translate(" + x(d.value.program) + ",0)";
       });
-  
+
       // draw the main box line for each year
       yearElems.append ('line')
         .attr ('x1', d => xYear (d.key))
-        .attr ('x2', d => xYear (d.key))    
+        .attr ('x2', d => xYear (d.key))
         .attr ('y1', d => y (d.value.q1))
         .attr ('y2', d => y (d.value.q4))
         .attr ('stroke', 'black');
-  
+
       // draw the main box for each year
       yearElems.append ("rect")
         .attr ("x", d => xYear (d.key) - boxWidth/2)
@@ -136,7 +143,7 @@ whiskersDiagram = function (
         .attr ("width", boxWidth)
         .attr ("stroke", "black")
         .attr ("fill", d => color (d.key));
-  
+
       // draw the average and quntile lines for each year
       yearElems
         .selectAll ("marks")
@@ -150,8 +157,8 @@ whiskersDiagram = function (
         .attr ('class', 'stat-lines')
         .attr ("x1", d => xYear (d.key) - boxWidth/2)
         .attr ("x2", d => xYear (d.key) + boxWidth/2)
-        .attr ("y1", d => y (d.value)) 
+        .attr ("y1", d => y (d.value))
         .attr ("y2", d => y (d.value))
         .attr ("stroke", "black");
   })
-}                                                      
+}

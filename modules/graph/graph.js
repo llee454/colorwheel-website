@@ -15,6 +15,7 @@ MODULE_LOAD_HANDLERS.add (
       'modules/graph/lib/sankey_diagram.js',
       'modules/graph/lib/network.js',
       'modules/graph/lib/venn.js/venn.js',
+      'modules/graph/lib/venn_diagram.js',
       'modules/graph/lib/whiskers_diagram.js',
       'modules/graph/lib/points_diagram.js',
       'modules/graph/lib/map_diagram.js'
@@ -172,6 +173,8 @@ function graph_whiskers_block (context, done, expand) {
   getBlockArguments ([
       {'name': 'data_file_name',  'text': true, 'required': true},
       {'name': 'container_id',    'text': true, 'required': true},
+      {'name': 'xAxisLabel',      'text': true, 'required': true},
+      {'name': 'yAxisLabel',      'text': true, 'required': true},
       {'name': 'height',          'text': true, 'required': false},
       {'name': 'width',           'text': true, 'required': false}
     ],
@@ -186,6 +189,8 @@ function graph_whiskers_block (context, done, expand) {
       whiskersDiagram (
         blockArguments.data_file_name,
         blockArguments.container_id,
+        blockArguments.xAxisLabel,
+        blockArguments.yAxisLabel,
         blockArguments.height,
         blockArguments.width
       );
