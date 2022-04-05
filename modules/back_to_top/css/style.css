@@ -1,0 +1,21 @@
+.back_to_top {
+  background: #f7f7f7 url("../images/scrollTopArrow.png") no-repeat scroll 90% 50%;
+  border: 1px solid #333333;
+  border-bottom: none;
+  bottom: 0px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  opacity: 100;
+  padding: 15px 50px 15px 25px;
+  position: fixed;
+  right: 2%;
+  z-index: 1000; }
+  .back_to_top a {
+    color: #222222; }
+
+@media (max-width: 550px) {
+  .back_to_top {
+    background-position: 50% 50%;
+    padding: 25px 25px; }
+    .back_to_top a {
+      display: none; } }

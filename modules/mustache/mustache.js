@@ -3,6 +3,39 @@
   pages and to fill in their variables using JSON files.
 */
 
+function mustache_PartialStore () {
+  var self = this
+
+  this._partials = {}
+
+  /*
+    Accepts two arguments:
+
+    * name, the partial name
+    * and template, the template string
+
+    and adds the partial to the store.
+  */
+  this.add = function (name, template) {
+    self._partials [name] = template
+  }
+
+  /*
+    Accepts one argument:
+
+    * partials, an associative array of partials keyed by name
+
+    and adds the partials to this store.
+  */
+  this.addPartials = function (partials) {
+    for (var name in partials) {
+      self.add (name, partials [name])
+    }
+  }
+}
+
+var mustache_PARTIALS = new mustache_PartialStore ()
+
 // Registers the block handlers and loads the Mustache library.
 MODULE_LOAD_HANDLERS.add (
   function (done) {
@@ -21,38 +54,25 @@ MODULE_LOAD_HANDLERS.add (
 /*
   Accepts two arguments:
 
-  * context, a Block Expansion Context * and done, a function that
-  accepts two arguments: an Error object and a JQuery HTML Element
+  * context, a Block Expansion Context
+  * and done, a function that accepts two arguments: an Error
+    object and a JQuery HTML Element
 
   replaces context.element with the mustache template referenced
   by the block element's nested arguments and calls done.
 */
 function mustache_block (context, done) {
-  getBlockArguments ([
-      {'name': 'template',  'text': true, 'required': true},
-      {'name': 'variables', 'text': true, 'required': true}
-    ],
-    context.element,
-    function (error, blockArguments) {
+  var template  = $(context.element).html ();
+  var variables = $(context.element).data('variables').replace ('PAGE_ID', context.getId ());
+  getPlainText (variables,
+    function (error, view) {
       if (error) {
         strictError (error);
         return done (error);
       }
-      getPlainText (blockArguments.template,
-        function (error, template) {
-          if (error) {
-            strictError (error);
-            return done (error);
-          }
-          getPlainText (blockArguments.variables,
-            function (error, view) {
-              if (error) {
-                strictError (error);
-                return done (error);
-              }
-              context.element.replaceWith (mustache.render (template, $.parseJSON(view)))
-              done (null, context.element)
-            })
-      })
-    });
+      context.element.html (mustache.render (template, $.parseJSON(view)))
+      done (null, context.element)
+    },
+    mustache_PARTIALS._partials
+  )
 }

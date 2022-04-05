@@ -12,7 +12,7 @@
     loading anything and call the Page Load
     event handlers.
   -->
-  <default_page_id>modules/page/templates/home.html</default_page_id>
+  <default_page_id>home</default_page_id>
 
   <!--
     If a page handler returns an error while

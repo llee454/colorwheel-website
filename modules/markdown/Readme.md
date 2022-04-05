@@ -50,14 +50,16 @@ The Markdown block accepts one argument, a URL; loads the markdown file at the g
   renders the markdown text stored in context.element and calls done.
 */
 function markdown_block (context, done) {
-  marked.parse (context.element.text (),
-    function (error, rendered) {
-      if (error) {
-        strictError (error)
-        return done (error)
-      }
-      context.element.replaceWith (rendered)
-      done (null, context.element)
+  // prevent Marked from treating indented text as code - dumbest idea ever...
+  marked
+    .parse (context.element.html ().replace(/^\s+/gm, ''),
+      function (error, rendered) {
+        if (error) {
+          strictError (error)
+          return done (error)
+        }
+        context.element.replaceWith (rendered)
+        done (null, context.element)
   })
 }
 ```

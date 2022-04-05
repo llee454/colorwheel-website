@@ -421,27 +421,17 @@ function page_block (context, done) {
   var element = context.element;
   var id = context.element.text ().trim ();
 
-  // I. If context.element contains text node representing page ID
-  if (id) {
-    return page_setPageElement (element, id,
-      function (error, pageElement) {
-        if (error) { return done (error); }
-
-        block_expandBlock (new block_Context (id, pageElement), done);
-    });
-  }
-
   PAGE_LOAD_HANDLERS.add (
     function (id, next) {
       /* 
-        II. If no page ID text node in content.element, access current
+        I. If no page ID text node in content.element, access current
         page ID; if that is empty, load the default page ID specified
         in Settings.
       */
       if (!id) {
         id = context.getId ();
       }
-      // III. If default page ID is blank, empty element and call done.
+      // II. If default page ID is blank, empty element and call done.
       if (!id) {
         element.empty ();
         return next (null);
@@ -454,6 +444,16 @@ function page_block (context, done) {
           block_expandBlock (new block_Context (id, pageElement), next); 
       });
   });
+
+  // III. If context.element contains text node representing page ID
+  if (id) {
+    return page_setPageElement (element, id,
+      function (error, pageElement) {
+        if (error) { return done (error); }
+
+        block_expandBlock (new block_Context (id, pageElement), done);
+    });
+  }
 
   var id = context.getId ();
   if (!id) {
@@ -707,7 +707,6 @@ function page_applyPageHandler (handler, id, done) {
       done (error);
   }
 }
-
 
 /*
   Accepts two arguments:

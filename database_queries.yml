@@ -1,0 +1,389 @@
+create_disease:
+  op: insert
+  table: diseases
+create_pest:
+  op: insert
+  table: pests
+create_plant:
+  op: insert
+  table: plants
+create_plant_pest:
+  op: insert
+  table: plant_pest
+create_plant_disease:
+  op: insert
+  table: plant_disease
+delete_disease:
+  op: execute
+  query: |
+    DELETE FROM diseases WHERE id = {{1}};
+    DELETE FROM plant_disease WHERE disease = {{1}};
+delete_pest:
+  op: execute
+  query: |
+    DELETE FROM pests WHERE id = {{1}};
+    DELETE FROM plant_pest WHERE pest = {{1}};
+delete_plant:
+  op: execute
+  query: |
+    DELETE FROM plants WHERE id = {{1}};
+    DELETE FROM plant_pest WHERE plant = {{1}};
+    DELETE FROM plant_disease WHERE plant = {{1}};
+delete_plant_disease:
+  op: execute
+  query:
+    DELETE FROM plant_disease WHERE plant = {{1}} AND disease = {{2}};
+delete_plant_pest:
+  op: execute
+  query:
+    DELETE FROM plant_pest WHERE plant = {{1}} AND pest = {{2}};
+disease:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'disease', JSON_OBJECT (
+          'id',              id,
+          'name',            name,
+          'lifecycle',       lifecycle,
+          'plants',          JSON (COALESCE (p.vals, '[]')),
+          'unlinked_plants', JSON (COALESCE (x.vals, '[]'))
+      ))
+    FROM diseases AS d
+    LEFT JOIN (
+      SELECT
+        disease,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',             id,
+          'botanical_name', botanical_name,
+          'common_name',    common_name,
+          'plant_image',    p.image,
+          'disease_image',  j.image
+        )) AS vals
+      FROM plants AS p
+      LEFT JOIN plant_disease AS j ON j.plant = p.id
+      GROUP BY disease
+    ) AS p ON p.disease = d.id
+    -- select unassociated plants
+    LEFT JOIN (
+      SELECT
+        t.id AS disease,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',             u.id,
+          'botanical_name', u.botanical_name,
+          'common_name',    u.common_name
+        )) AS vals
+      FROM diseases AS t
+      LEFT JOIN plants AS u
+      WHERE NOT EXISTS (SELECT * FROM plant_disease WHERE disease = t.id AND plant = u.id)
+      GROUP BY t.id
+    ) AS x ON x.disease = d.id
+    WHERE id = {{1}};
+diseases:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'results', JSON_GROUP_ARRAY (
+          JSON_OBJECT (
+            'id',     id,
+            'name',   name,
+            'plants', JSON (COALESCE (p.vals, '[]'))
+      )))
+    FROM diseases AS i
+    LEFT JOIN (
+      SELECT
+        disease,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',             id,
+          'botanical_name', botanical_name,
+          'common_name',    common_name,
+          'plant_image',    p.image,
+          'disease_image',  j.image
+        )) AS vals
+      FROM plants AS p
+      LEFT JOIN plant_disease AS j ON j.plant = p.id
+      GROUP BY disease
+    ) AS p ON p.disease = i.id
+    ORDER BY name;
+init: 
+  op: execute
+  query: |
+    CREATE TABLE "diseases" (
+      "id"  INTEGER PRIMARY KEY AUTOINCREMENT,
+      "name"  TEXT NOT NULL
+    );
+    CREATE TABLE "pests" (
+      "id"  INTEGER PRIMARY KEY AUTOINCREMENT,
+      "name"  TEXT NOT NULL,
+      "image"  TEXT
+    );
+    CREATE TABLE "plant_disease" (
+      "plant"  INTEGER NOT NULL,
+      "disease"  INTEGER NOT NULL,
+      "image"  TEXT
+    );
+    CREATE TABLE "plant_pest" (
+      "plant"  INTEGER NOT NULL,
+      "pest"  INTEGER NOT NULL
+    );
+    CREATE TABLE "plants" (
+      "id"  INTEGER PRIMARY KEY AUTOINCREMENT,
+      "botanical_name"  TEXT NOT NULL,
+      "common_name"  TEXT,
+      "image"  TEXT,
+      "description"  TEXT
+    );
+pest:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'pest', JSON_OBJECT (
+          'id',              id,
+          'name',            name,
+          'image',           image,
+          'lifecycle',       lifecycle,
+          'plants',          JSON (COALESCE (p.vals, '[]')),
+          'unlinked_plants', JSON (COALESCE (x.vals, '[]'))
+      ))
+    FROM pests AS i
+    LEFT JOIN (
+      SELECT
+        pest,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',             id,
+          'botanical_name', botanical_name,
+          'common_name',    common_name,
+          'image',          image
+        )) AS vals
+      FROM plants AS p
+      LEFT JOIN plant_pest AS j ON j.plant = p.id
+      GROUP BY pest
+    ) AS p ON p.pest = i.id
+    -- select unassociated plants
+    LEFT JOIN (
+      SELECT
+        t.id AS pest,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',             u.id,
+          'botanical_name', u.botanical_name,
+          'common_name',    u.common_name
+        )) AS vals
+      FROM pests AS t
+      LEFT JOIN plants AS u
+      WHERE NOT EXISTS (SELECT * FROM plant_pest WHERE pest = t.id AND plant = u.id)
+      GROUP BY t.id
+    ) AS x ON x.pest = i.id
+    WHERE id = {{1}};
+pests:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'results', JSON_GROUP_ARRAY (
+          JSON_OBJECT (
+            'id',     id,
+            'name',   name,
+            'plants', JSON (COALESCE (p.vals, '[]'))
+      )))
+    FROM pests AS i
+    LEFT JOIN (
+      SELECT
+        pest,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',             id,
+          'botanical_name', botanical_name,
+          'common_name',    common_name,
+          'image',          image
+        )) AS vals
+      FROM plants AS p
+      LEFT JOIN plant_pest AS j ON j.plant = p.id
+      GROUP BY pest
+    ) AS p ON p.pest = i.id
+    ORDER BY name;
+plant:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'plant', JSON_OBJECT (
+          'id',                id,
+          'botanical_name',    botanical_name,
+          'common_name',       common_name,
+          'description',       description,
+          'image',             image,
+          'pests',             JSON (COALESCE (i.vals, '[]')),
+          'diseases',          JSON (COALESCE (d.vals, '[]')),
+          'unlinked_pests',    JSON (COALESCE (x.vals, '[]')),
+          'unlinked_diseases', JSON (COALESCE (y.vals, '[]'))
+        ))
+     FROM plants AS p
+     LEFT JOIN (
+       SELECT
+         plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT (
+           'id',    id,
+           'name',  name,
+           'image', image
+         )) AS vals
+       FROM plant_disease AS t
+       INNER JOIN diseases AS u ON t.disease = u.id
+       GROUP BY plant
+     ) AS d ON d.plant = p.id
+     LEFT JOIN (
+       SELECT
+         plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT (
+           'id',    id,
+           'name',  name,
+           'image', image
+         )) AS vals
+       FROM plant_pest AS t
+       INNER JOIN pests AS u ON t.pest = u.id
+       GROUP BY plant
+     ) AS i ON i.plant = p.id
+     -- select unassociated pests
+     LEFT JOIN (
+       SELECT
+         t.id AS plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT ('id', u.id, 'name', u.name)) AS vals
+       FROM plants AS t
+       LEFT JOIN pests AS u
+       WHERE NOT EXISTS (SELECT * FROM plant_pest WHERE plant = t.id AND pest = u.id)
+       GROUP BY t.id
+     ) AS x ON x.plant = p.id
+     -- select unassociated diseases
+     LEFT JOIN (
+       SELECT
+         t.id AS plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT ('id', u.id, 'name', u.name)) AS vals
+       FROM plants AS t
+       LEFT JOIN diseases AS u
+       WHERE NOT EXISTS (SELECT * FROM plant_disease WHERE plant = t.id AND disease = u.id)
+       GROUP BY t.id
+     ) AS y ON y.plant = p.id
+     WHERE id = {{1}};
+plants:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'results', JSON_GROUP_ARRAY (
+          JSON_OBJECT (
+            'id',             id,
+            'botanical_name', botanical_name,
+            'common_name',    common_name,
+            'image',          image,
+            'pests',    JSON (COALESCE (i.vals, '[]')),
+            'diseases', JSON (COALESCE (d.vals, '[]'))
+      )))
+    FROM plants AS p
+    LEFT JOIN (
+      SELECT
+        plant,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',    id,
+          'name',  name,
+          'image', image
+        )) AS vals
+      FROM plant_disease AS t
+      INNER JOIN diseases AS u ON t.disease = u.id
+      GROUP BY plant
+    ) AS d ON d.plant = p.id
+    LEFT JOIN (
+      SELECT
+        plant,
+        JSON_GROUP_ARRAY (JSON_OBJECT (
+          'id',    id,
+          'name',  name,
+          'image', image
+        )) AS vals
+      FROM plant_pest AS t
+      INNER JOIN pests AS u ON t.pest = u.id
+      GROUP BY plant
+    ) AS i ON i.plant = p.id
+    ORDER BY botanical_name, common_name;
+update_pest:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'pest', JSON_OBJECT (
+          'id',              id,
+          'name',            name,
+          'lifecycle',       lifecycle,
+          'image',           image
+      ))
+    FROM pests AS i
+    WHERE id = {{1}};
+update_plant:
+  op: select
+  query: |
+    SELECT
+      JSON_OBJECT (
+        'plant', JSON_OBJECT (
+          'id',                id,
+          'botanical_name',    botanical_name,
+          'common_name',       common_name,
+          'description',       description,
+          'image',             image,
+          'pests',             JSON (COALESCE (i.vals, '[]')),
+          'diseases',          JSON (COALESCE (d.vals, '[]')),
+          'unlinked_pests',    JSON (COALESCE (x.vals, '[]')),
+          'unlinked_diseases', JSON (COALESCE (y.vals, '[]'))
+        ))
+     FROM plants AS p
+     LEFT JOIN (
+       SELECT
+         plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT (
+           'id',    id,
+           'name',  name,
+           'image', image
+         )) AS vals
+       FROM plant_disease AS t
+       INNER JOIN diseases AS u ON t.disease = u.id
+       GROUP BY plant
+     ) AS d ON d.plant = p.id
+     LEFT JOIN (
+       SELECT
+         plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT (
+           'id',    id,
+           'name',  name,
+           'image', image
+         )) AS vals
+       FROM plant_pest AS t
+       INNER JOIN pests AS u ON t.pest = u.id
+       GROUP BY plant
+     ) AS i ON i.plant = p.id
+     -- select unassociated pests
+     LEFT JOIN (
+       SELECT
+         t.id AS plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT ('id', u.id, 'name', u.name)) AS vals
+       FROM plants AS t
+       LEFT JOIN pests AS u
+       WHERE NOT EXISTS (SELECT * FROM plant_pest WHERE plant = t.id AND pest = u.id)
+       GROUP BY t.id
+     ) AS x ON x.plant = p.id
+     -- select unassociated diseases
+     LEFT JOIN (
+       SELECT
+         t.id AS plant,
+         JSON_GROUP_ARRAY (JSON_OBJECT ('id', u.id, 'name', u.name)) AS vals
+       FROM plants AS t
+       LEFT JOIN diseases AS u
+       WHERE NOT EXISTS (SELECT * FROM plant_disease WHERE plant = t.id AND disease = u.id)
+       GROUP BY t.id
+     ) AS y ON y.plant = p.id
+     WHERE id = {{1}};
+update_pest_submit:
+  op: upsert
+  primary_key: id
+  table: pests
+update_plant_submit:
+  op: upsert
+  primary_key: id
+  table: plants
