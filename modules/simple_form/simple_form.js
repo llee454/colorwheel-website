@@ -3,6 +3,28 @@
   that send JSON POST requests.
 */
 
+function simple_form_CallbackStore () {
+  var _handlers = {};
+
+  this.register = function (formId) {
+    _handlers [formId] = [];
+  }
+
+  this.add = function (formId, callback) {
+    if (_handlers [formId]) {
+      _handlers [formId].push (callback);
+    } else {
+      strictError (new Error ('Error: an error occured while trying to register a Simple Form callback for form ID ' + formId + '. The form does not exist.'));
+    }
+  }
+
+  this.execute = function (formId, done) {
+    async.applyEach (_handlers [formId], done);
+  }
+}
+
+var simple_form_CALLBACKS = new simple_form_CallbackStore ();
+
 /*
   Registers the block handlers.
 */
@@ -45,7 +67,7 @@ function simple_form_block (context, done) {
          var value = $(element).val ();
          if (escapeNewlines) {
            value = value
-             .replace (/\n/g, '\\n')
+             .replace (/\n/g, '\\\\n')
              .replace (/\"/g, '\\"');
          }
          if (name) {
@@ -55,17 +77,21 @@ function simple_form_block (context, done) {
 
        $.post (url, JSON.stringify (request) + "\n",
          function (content) {
-           if (reload) {
-             location.reload();
-           } else if (redirect) {
-             loadPage (redirect);
-           } else {
-             alert ('success: ' + content)
-           }
+           simple_form_CALLBACKS.execute (formId, function () {
+             if (reload) {
+               location.reload();
+             } else if (redirect) {
+               loadPage (redirect);
+             } else {
+               alert ('success: ' + content)
+             }
+           });
          }, 'text').fail (function () {
            alert ('failed')
          });
      });
+
+  simple_form_CALLBACKS.register (formId);
 
   done (null);
 }

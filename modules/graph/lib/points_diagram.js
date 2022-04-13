@@ -5,10 +5,10 @@ pointsDiagram = function (
   y_field_name,
   x_axis_label,
   y_axis_label,
-  maxWidth = 920,
-  maxHeight = 800
+  maxHeight = 800,
+  maxWidth = 920
 ) {
-  const margin = {top: 10, right: 30, bottom: 100, left: 100}
+  const margin = {top: 40, right: 20, bottom: 40, left: 20}
   const width = maxWidth - margin.left - margin.right
   const height = maxHeight - margin.top - margin.bottom
 
@@ -41,7 +41,7 @@ pointsDiagram = function (
 
     // Add Y axis
     var y = d3.scaleLinear ()
-      .domain ([d3.min (points, p => p.y), d3.max (points, p => p.y)]) // Note: starting value cannot be 0
+      .domain ([0, d3.max (points, p => parseFloat (p.y))]) // Note: starting value cannot be 0
       .range ([height, 0]);
 
     // create points

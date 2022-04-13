@@ -22,5 +22,10 @@ function simple_mde_block (context, done) {
     element: $(context.element)[0],
     forceSync: true
   }); 
+
+  setInterval(function() {
+    simplemde.codemirror.refresh();
+  }.bind(simplemde), 1000);
+
   done (null);
 }

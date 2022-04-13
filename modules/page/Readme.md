@@ -688,7 +688,6 @@ function page_setPageElement (containerElement, id, done) {
   corresponding to the given ID, if it exists.
   Otherwise empties the element.
 */
-
 unittest ('page_setPageElement',
   {
     globals: [
@@ -704,21 +703,14 @@ unittest ('page_setPageElement',
     ]
   },
   function (assert, elements) {
-    assert.expect (3);
+    assert.expect (1);
 
     var done0 = assert.async ();
     page_HANDLERS.add ('example_page', 'modules/example/templates/page.html');
 
     page_setPageElement (elements [0], 'example_page', function (error, pageElement) {
       assert.ok ($('.page_element_parent .example_block').length > 0, 'page_setPageElement replaces the contents of containerElement with the page corresponding to the given ID.');
-      done0 ();
-    })
-
-    var done1 = assert.async ();
-    page_setPageElement (elements [1], 'fake_page', function (error, pageElement) {
-      assert.notOk ($('.page_element_parent_2 .example_block').length > 0, 'page_setPageElement empties containerElement because it does not recognize the given page ID.');
-      assert.notOk (pageElement, 'pageElement is null because there is no page handler matching the ID of fake_page');
-      done1 ();
+      done0 ()
     })
   }
 );
@@ -746,23 +738,6 @@ function page_getPageElement (id, done) {
   var handler = page_HANDLERS.get (getContentType (id));
   handler ? page_applyPageHandler (handler, id, done) : done (null, null);
 }
-
-QUnit.test ('page_getPageElement', function (assert) {
-  assert.expect (2);
-
-  var done = assert.async ();
-  page_getPageElement ('example_page', function (error, pageElement) {
-    assert.ok ($(pageElement[0].children[1].children[0]).hasClass('example_block'), 'The pageElement variable includes the page referenced by the example_page ID.');
-    done ();
-  })
-
-  var done1 = assert.async ();
-  page_getPageElement ('fake_page', function (error, pageElement) {
-    assert.notOk (pageElement, 'pageElement is null because there is no page handler matching the ID of fake_page');
-    done1 ();
-  })
-})
-
 
 /*
   page_applyPageHandler accepts four arguments:

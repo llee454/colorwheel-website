@@ -18,6 +18,9 @@ mapDiagram = function (
       .getElementById (containerID)
       .appendChild (svg.documentElement);
 
+    containerElement = $('#' + containerID)
+      .prop ('style', 'position: relative;');
+
     let tooltip = d3.select ('#' + containerID)
       .attr ('class', 'graph_map')
       .append ('div')
@@ -72,9 +75,10 @@ mapDiagram = function (
           }
         })
         .on ('mousemove', function (e) {
+            var offset = $('#' + containerID).offset ();
             tooltip
-              .style ('left', (e.pageX - 75) + 'px')
-              .style ('top', (e.pageY - 100) + 'px')
+              .style ('left', (e.pageX - offset.left - 75) + 'px')
+              .style ('top', (e.pageY - offset.top - 100) + 'px')
         })
         .on ('mouseout', function (d) {
           tooltip

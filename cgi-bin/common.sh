@@ -59,8 +59,8 @@ function get_session_cookie() {
 # Reads the POST request body and returns it.
 function get_post_body() {
   local post
-  # [ -z "$post" -a "$REQUEST_METHOD" = "POST" -a ! -z "$CONTENT_LENGTH" ] && read -t 10 -n $CONTENT_LENGTH post
-  read -t1 post 
+  [ -z "$post" -a "$REQUEST_METHOD" = "POST" -a ! -z "$CONTENT_LENGTH" ] && read -t 10 -n $CONTENT_LENGTH post
+  # read -t1 post 
   echo "$post"
 }
 

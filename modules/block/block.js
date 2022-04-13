@@ -94,8 +94,8 @@ QUnit.test ('block_HandlerStore', function (assert) {
     'a': 'A',
     'f': function () { return 5; }
   });
-  assert.strictEqual (store1.get ('a'), 'A', 'block_HandlerStore.get returned the correct String Block Handler added using block_HandlerStore.addHandlers.');
-  assert.strictEqual (store1.get ('f')(), 5, 'block_handlerStore.get returned the correct Function Block Handler added using block_HandlerStore.addHandlers.');
+  assert.strictEqual (store.get ('a'), 'A', 'block_HandlerStore.get returned the correct String Block Handler added using block_HandlerStore.addHandlers.');
+  assert.strictEqual (store.get ('f')(), 5, 'block_handlerStore.get returned the correct Function Block Handler added using block_HandlerStore.addHandlers.');
 });
 
 /*
@@ -103,6 +103,13 @@ QUnit.test ('block_HandlerStore', function (assert) {
   block handlers.
 */
 var block_HANDLERS = new block_HandlerStore ();
+
+/*
+  The Handler store that stores the blocks that are
+  expanded within Mustache blocks. Specifically,
+  template block.
+*/
+var block_mustache_HANDLERS = new block_HandlerStore ();
 
 /*
   Accepts two arguments:
@@ -115,6 +122,7 @@ var block_HANDLERS = new block_HandlerStore ();
 function block_Context (id, element) {
   this.getId = function () { return id; }
   this.element = element;
+  this.inMustacheBlock = false;
 }
 
 /*
@@ -123,14 +131,26 @@ function block_Context (id, element) {
 */
 MODULE_LOAD_HANDLERS.add (
   function (done) {
-    // I. Register the core block handlers.
-    block_HANDLERS.addHandlers ({
-      'core_id_block':        block_IDBlock,
-      'block_template_block': block_templateBlock
-    });
+    loadScripts ([
+      'modules/mustache/lib/mustache.js-4.2.0/mustache.js'
+    ],
+    function (error) {
+      if (error) { return done (error); }
 
-    // II. Continue.
-    done (null);
+      // I. Register the core block handlers.
+      block_HANDLERS.addHandlers ({
+        'core_id_block':        block_IDBlock,
+        'block_template_block': block_templateBlock,
+        'block_mustache_block': block_mustacheBlock
+      });
+
+      block_mustache_HANDLERS.add (
+        'block_template_block', block_templateBlock
+      );
+
+      // II. Continue.
+      done (null);
+  })
 });
 
 /*
@@ -258,6 +278,18 @@ unittest ('block_expandDocumentBlocks',
   its successful continuation. This should only be
   done when the expanded block element needs to be
   parsed by an external library.
+
+  Note: Mustache blocks are unique in that
+  they treat their internal content as text
+  strings. When the block parser reaches a
+  Mustache block it shifts its behavior. It
+  expands any template blocks contained within
+  the Mustache block, but does not expand any
+  other blocks. It then expands the Mustache
+  block which substitutes values for any Mustache
+  strings contained within the block. Once done,
+  the Mustache block calls block expansion on
+  the result.
 */
 function block_expandBlock (context, done) {
   if (!context || !context.element) { return done (); }
@@ -270,20 +302,33 @@ function block_expandBlock (context, done) {
     return done ();
   }
 
-  block_expandBlocks (id,
-    block_getBlockElementsInElements (block_HANDLERS, context.element.children ()), 
-    function () {
-      var blockHandler = block_getHandler (block_HANDLERS, context.element);
-      if (blockHandler) {
-        // Remove the block handler's class.
-        context.element.removeClass (blockHandler.name);
+  var isMustacheBlock = context.element.hasClass ('block_mustache_block');
+  var childInMustacheBlock = context.inMustacheBlock || isMustacheBlock;
 
+  // Only expand template and ID blocks during the first pass through Mustache blocks.
+  var childHandlers = childInMustacheBlock ?
+    block_mustache_HANDLERS:
+    block_HANDLERS;
+
+  block_expandBlocks (id, childInMustacheBlock,
+    block_getBlockElementsInElements (childHandlers, context.element.children ()), 
+    function () {
+      var blockHandler = block_getHandler (
+        context.inMustacheBlock ? block_mustache_HANDLERS : block_HANDLERS,
+        context.element
+      );
+      if (blockHandler) {
         // Apply the block handler.
         return block_applyBlockHandler (blockHandler.handler, context,
           function (error, expandedElement) {
             if (error) { return done (error); }
 
-            block_expandBlock (new block_Context (id, expandedElement), done);
+            // Remove the block handler's class.
+            context.element.removeClass (blockHandler.name);
+
+            nextContext = new block_Context (id, expandedElement);
+            nextContext.inMustacheBlock = context.inMustacheBlock;
+            block_expandBlock (nextContext, done);
         });
       }
       done ();
@@ -294,6 +339,7 @@ function block_expandBlock (context, done) {
   block_expandBlocks accepts three arguments:
 
   * id, an Id string
+  * inMustacheBlock, a boolean value
   * elements, a JQuery HTML Element array
   * and done, a function that does not accept any
     arguments.
@@ -301,8 +347,8 @@ function block_expandBlock (context, done) {
   expandBlocks expands the blocks within elements
   and calls done.
 */
-function block_expandBlocks (id, elements, done) {
-  _block_expandBlocks (0, id, elements, done);
+function block_expandBlocks (id, inMustacheBlock, elements, done) {
+  _block_expandBlocks (0, id, inMustacheBlock, elements, done);
 }
 
 /*
@@ -310,6 +356,7 @@ function block_expandBlocks (id, elements, done) {
 
   * elementIndex, a positive integer
   * id, an Id string
+  * inMustacheBlock, a boolean value
   * elements, JQuery HTML Element array
   * and done, a function that does not accept any
     arguments.
@@ -319,16 +366,19 @@ function block_expandBlocks (id, elements, done) {
   expanding any blocks contained within each. Once
   done, _expandBlocks calls done.
 */
-function _block_expandBlocks (elementIndex, id, elements, done) {
+function _block_expandBlocks (elementIndex, id, inMustacheBlock, elements, done) {
   // I. Call done when all of the elements have been expanded.
   if (elementIndex >= elements.length) {
     return done ();
   }
+  var context = new block_Context (id, elements [elementIndex]);
+  context.inMustacheBlock = inMustacheBlock;
+
   // II. Expand the current element.
-  block_expandBlock (new block_Context (id, elements [elementIndex]),
+  block_expandBlock (context,
     function () {
       // III. Expand the remaining elements.
-      _block_expandBlocks (elementIndex + 1, id, elements, done);
+      _block_expandBlocks (elementIndex + 1, id, inMustacheBlock, elements, done);
   });
 }
 
@@ -538,6 +588,31 @@ unittest ('block_templateBlock',
         done ();
     });
 });
+
+/*
+  Accepts two arguments:
+
+  * context, a Block Expansion Context
+  * and done, a function that accepts two arguments: an Error
+    object and a JQuery HTML Element
+
+  replaces context.element with the mustache template referenced
+  by the block element's nested arguments and calls done.
+*/
+function block_mustacheBlock (context, done) {
+  var template  = $(context.element).html ();
+  var variables = $(context.element).data('variables').replace ('PAGE_ID', context.getId ());
+  getPlainText (variables,
+    function (error, view) {
+      if (error) {
+        strictError (error);
+        return done (error);
+      }
+      context.element.html (mustache.render (template, $.parseJSON(view)))
+      done (null, context.element)
+    }
+  )
+}
 
 /*
   getBlockArguments accepts three arguments:

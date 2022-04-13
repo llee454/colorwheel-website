@@ -11,8 +11,6 @@ MODULE_LOAD_HANDLERS.add (
       'https://d3js.org/d3-fetch.v2.min.js',
       'https://d3js.org/d3-geo-projection.v2.min.js', // remove?
       'modules/graph/lib/scalable_marimekko.js',
-      'modules/graph/lib/sankey.js',
-      'modules/graph/lib/sankey_diagram.js',
       'modules/graph/lib/network.js',
       'modules/graph/lib/venn.js/venn.js',
       'modules/graph/lib/venn_diagram.js',
@@ -29,7 +27,6 @@ MODULE_LOAD_HANDLERS.add (
         'graph_scalable_marimekko_block': graph_scalable_marimekko_block,
         'graph_network_block': graph_network_block,
         'graph_venn_block': graph_venn_block,
-        'graph_sankey_block': graph_sankey_block,
         'graph_whiskers_block': graph_whiskers_block,
         'graph_points_block': graph_points_block,
         'graph_map_block': graph_map_block
@@ -137,31 +134,6 @@ function graph_venn_block (context, done, expand) {
         blockArguments.data_file_name,
         blockArguments.container_id,
         blockArguments.label,
-        blockArguments.height,
-        blockArguments.width
-      );
-      done (null, null)
-  })
-}
-
-function graph_sankey_block (context, done, expand) {
-  getBlockArguments ([
-      {'name': 'data_file_name',  'text': true, 'required': true},
-      {'name': 'container_id',    'text': true, 'required': true},
-      {'name': 'height',          'text': true, 'required': false},
-      {'name': 'width',           'text': true, 'required': false}
-    ],
-    context.element,
-    function (error, blockArguments) {
-      if (error) return done (error)
-
-      var element = $('<div></div>').attr ('id', blockArguments.container_id)
-
-      context.element.replaceWith (element)
-
-      sankeyDiagram (
-        blockArguments.data_file_name,
-        blockArguments.container_id,
         blockArguments.height,
         blockArguments.width
       );

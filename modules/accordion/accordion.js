@@ -98,7 +98,7 @@ unittest ('accordion_block',
 */
 function accordion_itemBlock (context, done, expand) {
   getBlockArguments ([
-      {'name': 'accordion_item_number', 'text': true,  'required': true},
+      {'name': 'accordion_item_number', 'text': false, 'required': true},
       {'name': 'accordion_item_title',  'text': false, 'required': true},
       {'name': 'accordion_item_body',   'text': false, 'required': true}
     ],
@@ -108,12 +108,13 @@ function accordion_itemBlock (context, done, expand) {
 
       var expanded = false;
       var element = $('<div></div>')
+        .addClass (context.element.attr ('class').replace (/accordion_item_block/,''))
         .addClass ('accordion_item')
         .append ($('<div></div>')
           .addClass ('accordion_item_header')
           .append ($('<div></div>')
             .addClass ('accordion_item_header_left')
-            .text (blockArguments.accordion_item_number.trim ()))
+            .html (blockArguments.accordion_item_number.html ()))
           .append ($('<div></div>')
             .addClass ('accordion_item_header_middle')
             .append (blockArguments.accordion_item_title))

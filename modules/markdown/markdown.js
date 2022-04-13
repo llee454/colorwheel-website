@@ -31,6 +31,7 @@ function markdown_block (context, done) {
   // prevent Marked from treating indented text as code - dumbest idea ever...
   marked
     .parse (context.element.html ().replace(/^\s+/gm, ''),
+      { breaks: true },
       function (error, rendered) {
         if (error) {
           strictError (error)

@@ -39,11 +39,24 @@ case $(get_request_op "$request" "$params") in
     login "$user_name" "$password"
     http_respond
     ;;
-  execute|select)
+  select)
     check_perms "$request" "$session" "$params"
     http_respond
     query=$(get_request_query "$request" "$params")
-    sqlite3 "$database" "$query"
+    response=$(sqlite3 "$database" "$query" | sed 's/\\\\n/\\n/g' -)
+    if [[ -z "$response" ]]
+    then
+      response='{"no_results": true}'
+    fi
+    echo "$response"
+    ;;
+  execute)
+    check_perms "$request" "$session" "$params"
+    http_respond
+    query=$(get_request_query "$request" "$params")
+    echo "post: $post" 1>&2
+    echo "query: $query" 1>&2
+    sqlite3 "$database" "$query" | sed 's/\\\\n/\\n/g' -
     ;;
   insert)
     check_perms "$request" "$session" "$params"
