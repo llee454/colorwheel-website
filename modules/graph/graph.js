@@ -179,7 +179,9 @@ function graph_points_block (context, done, expand) {
       {'name': 'x_axis_label',    'text': true, 'required': true},
       {'name': 'y_axis_label',    'text': true, 'required': true},
       {'name': 'height',          'text': true, 'required': false},
-      {'name': 'width',           'text': true, 'required': false}
+      {'name': 'width',           'text': true, 'required': false},
+      {'name': 'y_min',           'text': true, 'required': false},
+      {'name': 'y_max',           'text': true, 'required': false}
     ],
     context.element,
     function (error, blockArguments) {
@@ -197,7 +199,9 @@ function graph_points_block (context, done, expand) {
         blockArguments.x_axis_label,
         blockArguments.y_axis_label,
         blockArguments.height,
-        blockArguments.width
+        blockArguments.width,
+        blockArguments.y_min,
+        blockArguments.y_max
       );
       done (null, null)
   })
